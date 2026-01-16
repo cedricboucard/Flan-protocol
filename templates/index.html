@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍮 FLAN Protocol Monitor v1.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --caramel-dark: #8B4513;
+            --caramel: #D2691E;
+            --caramel-light: #DEB887;
+            --creme: #FFF8DC;
+            --vanille: #FAEBD7;
+            --orange: #FF8C00;
+            --orange-light: #FFB347;
+            --sucre: #F5DEB3;
+            --chocolat: #3D2314;
+            --four-red: #DC143C;
+            --success-green: #228B22;
+            --shadow-warm: rgba(139, 69, 19, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Pro', Georgia, serif;
+            background: linear-gradient(135deg, var(--vanille) 0%, var(--creme) 50%, var(--sucre) 100%);
+            min-height: 100vh;
+            color: var(--chocolat);
+            overflow-x: hidden;
+        }
+
+        /* Texture de fond façon papier pâtisserie */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(210, 105, 30, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 140, 0, 0.03) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(180deg, var(--chocolat) 0%, #2D1810 100%);
+            color: var(--creme);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 20px var(--shadow-warm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--caramel), var(--orange), var(--caramel-light), var(--caramel));
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            animation: wobble 3s ease-in-out infinite;
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        .logo h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .logo-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--caramel-light);
+            letter-spacing: 0.1em;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(34, 139, 34, 0.2);
+            border: 1px solid var(--success-green);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Main layout */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 350px 1fr 320px;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 
+                0 4px 6px rgba(139, 69, 19, 0.1),
+                0 10px 40px rgba(139, 69, 19, 0.15);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 12px rgba(139, 69, 19, 0.15),
+                0 20px 60px rgba(139, 69, 19, 0.2);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--caramel) 0%, var(--caramel-dark) 100%);
+            color: white;
+            padding: 1rem 1.25rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        /* Commander panel */
+        .recette-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .recette-card {
+            background: linear-gradient(135deg, var(--creme) 0%, var(--vanille) 100%);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .recette-card:hover {
+            border-color: var(--caramel);
+            transform: scale(1.02);
+        }
+
+        .recette-card.selected {
+            border-color: var(--orange);
+            background: linear-gradient(135deg, var(--orange-light) 0%, var(--caramel-light) 100%);
+            box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
+        }
+
+        .recette-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .recette-nom {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--chocolat);
+        }
+
+        /* Buttons */
+        .btn {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--caramel) 0%, var(--caramel-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(210, 105, 30, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--caramel) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--vanille);
+            color: var(--chocolat);
+            border: 2px solid var(--caramel-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--caramel-light);
+        }
+
+        /* Monitor central */
+        .monitor {
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .monitor-screen {
+            flex: 1;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #00ff88;
+            overflow-y: auto;
+            max-height: 450px;
+            position: relative;
+        }
+
+        .monitor-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 136, 0.03) 2px,
+                    rgba(0, 255, 136, 0.03) 4px
+                );
+            pointer-events: none;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-entry.prechauffage { color: #ff6b6b; background: rgba(255, 107, 107, 0.1); }
+        .log-entry.commande { color: #ffd93d; background: rgba(255, 217, 61, 0.1); }
+        .log-entry.progression { color: #6bcb77; background: rgba(107, 203, 119, 0.1); }
+        .log-entry.termine { color: #4d96ff; background: rgba(77, 150, 255, 0.1); }
+        .log-entry.erreur { color: #ff4757; background: rgba(255, 71, 87, 0.1); }
+
+        .log-time {
+            color: #888;
+            margin-right: 0.75rem;
+        }
+
+        /* Fours status */
+        .fours-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .four-item {
+            background: var(--vanille);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .four-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .four-item.disponible .four-icon {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        }
+
+        .four-item.prechauffage .four-icon {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            animation: glow-orange 1s ease-in-out infinite;
+        }
+
+        .four-item.cuisson .four-icon {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            animation: glow-red 0.5s ease-in-out infinite;
+        }
+
+        @keyframes glow-orange {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 140, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 140, 0, 0.8); }
+        }
+
+        @keyframes glow-red {
+            0%, 100% { box-shadow: 0 0 10px rgba(220, 20, 60, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(220, 20, 60, 0.9); }
+        }
+
+        .four-info {
+            flex: 1;
+        }
+
+        .four-name {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            color: var(--chocolat);
+        }
+
+        .four-status {
+            font-size: 0.8rem;
+            color: var(--caramel-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .four-temp {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--four-red);
+            font-weight: 500;
+        }
+
+        /* Commande en cours */
+        .commande-active {
+            background: linear-gradient(135deg, var(--orange-light) 0%, var(--caramel-light) 100%);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .commande-active h4 {
+            font-family: 'Playfair Display', serif;
+            color: var(--chocolat);
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            height: 20px;
+            overflow: hidden;
+            margin: 0.75rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--caramel) 0%, var(--orange) 100%);
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: white;
+            font-weight: 500;
+        }
+
+        .etape-actuelle {
+            font-size: 0.9rem;
+            color: var(--chocolat);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        /* Animation flan */
+        .flan-animation {
+            width: 80px;
+            height: 60px;
+            margin: 1rem auto;
+            position: relative;
+        }
+
+        .flan-body {
+            width: 70px;
+            height: 45px;
+            background: linear-gradient(180deg, #f5deb3 0%, #daa520 100%);
+            border-radius: 0 0 35px 35px;
+            position: absolute;
+            bottom: 0;
+            left: 5px;
+            box-shadow: 0 5px 15px rgba(139, 69, 19, 0.3);
+        }
+
+        .flan-caramel {
+            width: 75px;
+            height: 12px;
+            background: linear-gradient(180deg, #8b4513 0%, #d2691e 100%);
+            border-radius: 5px;
+            position: absolute;
+            top: 8px;
+            left: 2.5px;
+        }
+
+        .flan-steam {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+        }
+
+        .steam {
+            width: 8px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: steam 1.5s ease-in-out infinite;
+        }
+
+        .steam:nth-child(2) { animation-delay: 0.3s; }
+        .steam:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes steam {
+            0% { transform: translateY(0) scale(1); opacity: 0.6; }
+            50% { transform: translateY(-10px) scale(1.2); opacity: 0.3; }
+            100% { transform: translateY(-20px) scale(0.8); opacity: 0; }
+        }
+
+        /* Visualisation paquet */
+        .packet-viz {
+            background: var(--creme);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .packet-section {
+            display: flex;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .packet-label {
+            background: var(--caramel);
+            color: white;
+            padding: 0.5rem;
+            min-width: 80px;
+            font-weight: 500;
+        }
+
+        .packet-content {
+            background: white;
+            padding: 0.5rem;
+            flex: 1;
+            border: 1px solid var(--caramel-light);
+            border-left: none;
+        }
+
+        /* Ping result */
+        .ping-result {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--creme);
+            border-radius: 8px;
+            margin-top: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .ping-result.success { border-left: 4px solid var(--success-green); }
+        .ping-result.error { border-left: 4px solid var(--four-red); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--caramel-dark);
+            font-family: 'Crimson Pro', serif;
+        }
+
+        footer a {
+            color: var(--caramel);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            background: var(--vanille);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-family: 'Crimson Pro', serif;
+            font-size: 0.9rem;
+            color: var(--caramel-dark);
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: var(--caramel);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--caramel-light);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Code block */
+        .code-block {
+            background: #1a1a2e;
+            color: #00ff88;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            margin-top: 0.75rem;
+        }
+
+        .code-block .keyword { color: #ff79c6; }
+        .code-block .string { color: #f1fa8c; }
+        .code-block .comment { color: #6272a4; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .recette-grid {
+                grid-template-columns: 1fr;
+            }
+
+            main {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🍮</span>
+                <div>
+                    <h1>FLAN Protocol</h1>
+                    <div class="logo-subtitle">FLAN LAYERED ACCESS NETWORK • RFC 3141</div>
+                </div>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>Cuisine opérationnelle</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Panel gauche : Commander -->
+        <div class="card">
+            <div class="card-header">
+                <span>👨‍🍳</span>
+                Commander un Flan
+            </div>
+            <div class="card-body">
+                <div class="tabs">
+                    <button class="tab active" data-tab="commander">Commander</button>
+                    <button class="tab" data-tab="outils">Outils</button>
+                </div>
+
+                <div id="tab-commander" class="tab-content active">
+                    <p style="margin-bottom: 1rem; color: var(--caramel-dark);">Sélectionnez une recette :</p>
+                    
+                    <div class="recette-grid" id="recettes-grid">
+                        <!-- Rempli par JS -->
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-prechauffer">
+                        🔥 Préchauffer le four
+                    </button>
+                    
+                    <div style="height: 0.75rem;"></div>
+                    
+                    <button class="btn btn-primary" id="btn-commander" disabled>
+                        📝 Envoyer la commande
+                    </button>
+
+                    <div id="commande-status" style="margin-top: 1rem; display: none;">
+                        <div class="commande-active">
+                            <div class="flan-animation">
+                                <div class="flan-steam">
+                                    <div class="steam"></div>
+                                    <div class="steam"></div>
+                                    <div class="steam"></div>
+                                </div>
+                                <div class="flan-caramel"></div>
+                                <div class="flan-body"></div>
+                            </div>
+                            <h4 id="commande-titre">Flan en préparation...</h4>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill" style="width: 0%">0%</div>
+                            </div>
+                            <div class="etape-actuelle" id="etape-actuelle">
+                                <span>⏳</span>
+                                <span>En attente...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-outils" class="tab-content">
+                    <button class="btn btn-secondary" id="btn-ping" style="margin-bottom: 0.75rem;">
+                        📡 FLAN-PING
+                    </button>
+                    <div id="ping-result"></div>
+
+                    <button class="btn btn-secondary" id="btn-theiere" style="margin-bottom: 0.75rem;">
+                        🫖 Easter Egg (418)
+                    </button>
+
+                    <button class="btn btn-secondary" id="btn-docs">
+                        📚 Documentation API
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel central : Monitor -->
+        <div class="card monitor">
+            <div class="card-header">
+                <span>📟</span>
+                FLAN Protocol Monitor
+            </div>
+            <div class="card-body" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="monitor-screen" id="monitor-screen">
+                    <div class="log-entry">
+                        <span class="log-time">[--:--:--]</span>
+                        <span>🍮 FLAN Protocol Server v1.0 initialisé</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">[--:--:--]</span>
+                        <span>📖 En attente de commandes...</span>
+                    </div>
+                </div>
+
+                <div id="packet-display" style="margin-top: 1rem; display: none;">
+                    <h4 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">📦 Dernier paquet FLAN</h4>
+                    <div class="packet-viz" id="packet-viz">
+                        <!-- Rempli par JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel droit : Statut -->
+        <div>
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <span>🔥</span>
+                    État des Fours
+                </div>
+                <div class="card-body">
+                    <div class="fours-grid" id="fours-grid">
+                        <!-- Rempli par JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>📊</span>
+                    Statistiques
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div style="text-align: center; padding: 0.75rem; background: var(--creme); border-radius: 8px;">
+                            <div style="font-size: 1.5rem; font-family: 'Playfair Display', serif; color: var(--caramel-dark);" id="stat-commandes">0</div>
+                            <div style="font-size: 0.75rem; color: var(--caramel);">Commandes</div>
+                        </div>
+                        <div style="text-align: center; padding: 0.75rem; background: var(--creme); border-radius: 8px;">
+                            <div style="font-size: 1.5rem; font-family: 'Playfair Display', serif; color: var(--caramel-dark);" id="stat-latence">--</div>
+                            <div style="font-size: 0.75rem; color: var(--caramel);">Latence (ms)</div>
+                        </div>
+                        <div style="text-align: center; padding: 0.75rem; background: var(--creme); border-radius: 8px;">
+                            <div style="font-size: 1.5rem; font-family: 'Playfair Display', serif; color: var(--caramel-dark);" id="stat-fours">3</div>
+                            <div style="font-size: 0.75rem; color: var(--caramel);">Fours actifs</div>
+                        </div>
+                        <div style="text-align: center; padding: 0.75rem; background: var(--creme); border-radius: 8px;">
+                            <div style="font-size: 1.5rem; font-family: 'Playfair Display', serif; color: var(--caramel-dark);" id="stat-succes">0</div>
+                            <div style="font-size: 0.75rem; color: var(--caramel);">Succès</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>🍮 FLAN Protocol v1.0 — RFC 3141 (Request For Caramel)</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+            © La Pâtisserie de l'Orange — 
+            <a href="/api/flan/documentation" target="_blank">Documentation API</a>
+        </p>
+    </footer>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🍮 FLAN Protocol Client
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        const API_BASE = '/api/flan';
+        let recetteSelectionnee = null;
+        let fourReserve = null;
+        let commandeEnCours = null;
+        let statsCommandes = 0;
+        let statsSucces = 0;
+
+        // Éléments DOM
+        const elements = {
+            recettesGrid: document.getElementById('recettes-grid'),
+            foursGrid: document.getElementById('fours-grid'),
+            monitorScreen: document.getElementById('monitor-screen'),
+            btnPrechauffer: document.getElementById('btn-prechauffer'),
+            btnCommander: document.getElementById('btn-commander'),
+            btnPing: document.getElementById('btn-ping'),
+            btnTheiere: document.getElementById('btn-theiere'),
+            btnDocs: document.getElementById('btn-docs'),
+            commandeStatus: document.getElementById('commande-status'),
+            commandeTitre: document.getElementById('commande-titre'),
+            progressFill: document.getElementById('progress-fill'),
+            etapeActuelle: document.getElementById('etape-actuelle'),
+            packetDisplay: document.getElementById('packet-display'),
+            packetViz: document.getElementById('packet-viz'),
+            pingResult: document.getElementById('ping-result'),
+            statCommandes: document.getElementById('stat-commandes'),
+            statLatence: document.getElementById('stat-latence'),
+            statFours: document.getElementById('stat-fours'),
+            statSucces: document.getElementById('stat-succes')
+        };
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 📝 Logging
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        function log(message, type = '') {
+            const time = new Date().toLocaleTimeString('fr-FR');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<span class="log-time">[${time}]</span><span>${message}</span>`;
+            elements.monitorScreen.appendChild(entry);
+            elements.monitorScreen.scrollTop = elements.monitorScreen.scrollHeight;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🍳 Recettes
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        async function chargerRecettes() {
+            try {
+                const response = await fetch(`${API_BASE}/recettes`);
+                const data = await response.json();
+                
+                elements.recettesGrid.innerHTML = '';
+                
+                for (const [id, recette] of Object.entries(data.donnees.recettes)) {
+                    const card = document.createElement('div');
+                    card.className = 'recette-card';
+                    card.dataset.recette = id;
+                    card.innerHTML = `
+                        <span class="recette-emoji">${recette.emoji}</span>
+                        <span class="recette-nom">${recette.nom}</span>
+                    `;
+                    card.addEventListener('click', () => selectionnerRecette(id, card));
+                    elements.recettesGrid.appendChild(card);
+                }
+                
+                log('📖 Recettes chargées : ' + Object.keys(data.donnees.recettes).join(', '));
+            } catch (error) {
+                log('❌ Erreur chargement recettes: ' + error.message, 'erreur');
+            }
+        }
+
+        function selectionnerRecette(id, card) {
+            document.querySelectorAll('.recette-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            recetteSelectionnee = id;
+            log(`🎯 Recette sélectionnée: ${id}`);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🔥 Fours
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        async function chargerFours() {
+            try {
+                const response = await fetch(`${API_BASE}/fours`);
+                const data = await response.json();
+                
+                elements.foursGrid.innerHTML = '';
+                let foursDisponibles = 0;
+                
+                for (const [id, four] of Object.entries(data.donnees.fours)) {
+                    const item = document.createElement('div');
+                    item.className = `four-item ${four.statut}`;
+                    
+                    let emoji = '🔲';
+                    let tempDisplay = '--';
+                    
+                    if (four.statut === 'disponible') {
+                        emoji = '✅';
+                        foursDisponibles++;
+                    } else if (four.statut === 'prechauffage') {
+                        emoji = '🔥';
+                        tempDisplay = four.temperature + '°C';
+                    } else if (four.statut === 'cuisson') {
+                        emoji = '🍮';
+                        tempDisplay = four.temperature + '°C';
+                    } else if (four.statut === 'pret') {
+                        emoji = '👍';
+                        tempDisplay = four.temperature + '°C';
+                        foursDisponibles++;
+                    }
+                    
+                    item.innerHTML = `
+                        <div class="four-icon">${emoji}</div>
+                        <div class="four-info">
+                            <div class="four-name">${id.replace('_', ' ').toUpperCase()}</div>
+                            <div class="four-status">${four.statut}</div>
+                        </div>
+                        <div class="four-temp">${tempDisplay}</div>
+                    `;
+                    elements.foursGrid.appendChild(item);
+                }
+                
+                elements.statFours.textContent = foursDisponibles;
+            } catch (error) {
+                log('❌ Erreur chargement fours: ' + error.message, 'erreur');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🔌 Actions API
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        async function prechauffer() {
+            log('🔥 Envoi SYN (Préchauffage)...', 'prechauffage');
+            
+            try {
+                const response = await fetch(`${API_BASE}/prechauffage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ temperature: 180, moule: 'INDIVIDUEL' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.statut.code === 200) {
+                    fourReserve = data.donnees.four_id;
+                    log(`✅ SYN-ACK reçu : ${data.donnees.message}`, 'prechauffage');
+                    log(`📡 Four assigné: ${fourReserve}`, 'prechauffage');
+                    elements.btnCommander.disabled = false;
+                    
+                    afficherPaquet(data.donnees.paquet_syn_ack, 'SYN-ACK');
+                } else {
+                    log(`⚠️ ${data.message}`, 'erreur');
+                }
+                
+                chargerFours();
+            } catch (error) {
+                log('❌ Erreur préchauffage: ' + error.message, 'erreur');
+            }
+        }
+
+        async function commander() {
+            if (!recetteSelectionnee) {
+                log('⚠️ Veuillez sélectionner une recette', 'erreur');
+                return;
+            }
+            
+            log(`📝 Envoi commande: ${recetteSelectionnee}...`, 'commande');
+            statsCommandes++;
+            elements.statCommandes.textContent = statsCommandes;
+            
+            try {
+                const response = await fetch(`${API_BASE}/commander`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recette: recetteSelectionnee,
+                        four_id: fourReserve,
+                        portions: 1,
+                        options: { priorite: 'NORMAL' }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.statut.code === 201) {
+                    commandeEnCours = data.donnees.commande_id;
+                    log(`✅ Commande acceptée: ${commandeEnCours}`, 'commande');
+                    log(`${data.donnees.emoji} ${data.donnees.recette}`, 'commande');
+                    
+                    elements.commandeStatus.style.display = 'block';
+                    elements.commandeTitre.textContent = `${data.donnees.emoji} ${data.donnees.recette}`;
+                    elements.btnCommander.disabled = true;
+                    elements.btnPrechauffer.disabled = true;
+                    
+                    // Polling du statut
+                    pollStatut();
+                } else {
+                    log(`❌ ${data.message}`, 'erreur');
+                }
+            } catch (error) {
+                log('❌ Erreur commande: ' + error.message, 'erreur');
+            }
+        }
+
+        async function pollStatut() {
+            if (!commandeEnCours) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/commande/${commandeEnCours}`);
+                const data = await response.json();
+                
+                if (data.donnees.statut === 'EN_COURS') {
+                    const progression = data.donnees.progression;
+                    elements.progressFill.style.width = progression + '%';
+                    elements.progressFill.textContent = progression + '%';
+                    
+                    if (data.donnees.etape_actuelle) {
+                        elements.etapeActuelle.innerHTML = `
+                            <span>⏳</span>
+                            <span>${data.donnees.etape_actuelle.description}</span>
+                        `;
+                        log(`${data.donnees.etape_actuelle.description} (${progression}%)`, 'progression');
+                    }
+                    
+                    chargerFours();
+                    setTimeout(pollStatut, 500);
+                    
+                } else if (data.donnees.statut === 'FLAN_PRET') {
+                    elements.progressFill.style.width = '100%';
+                    elements.progressFill.textContent = '100%';
+                    elements.etapeActuelle.innerHTML = `
+                        <span>🍮</span>
+                        <span>Flan prêt ! Bonne dégustation !</span>
+                    `;
+                    
+                    log(`🎉 ${data.message}`, 'termine');
+                    log(`📊 Temps total: ${data.donnees.metadonnees.temps_total}`, 'termine');
+                    
+                    statsSucces++;
+                    elements.statSucces.textContent = statsSucces;
+                    
+                    // Reset
+                    setTimeout(() => {
+                        elements.commandeStatus.style.display = 'none';
+                        elements.btnPrechauffer.disabled = false;
+                        fourReserve = null;
+                        commandeEnCours = null;
+                        chargerFours();
+                    }, 3000);
+                }
+            } catch (error) {
+                log('❌ Erreur polling: ' + error.message, 'erreur');
+            }
+        }
+
+        async function ping() {
+            const debut = performance.now();
+            
+            try {
+                const response = await fetch(`${API_BASE}/ping`);
+                const data = await response.json();
+                const latence = (performance.now() - debut).toFixed(2);
+                
+                elements.pingResult.innerHTML = `
+                    <div class="ping-result success">
+                        🍮 Pong! Latence: ${latence}ms | Texture: ${data.donnees.texture}
+                    </div>
+                `;
+                elements.statLatence.textContent = latence;
+                log(`📡 PING → PONG (${latence}ms)`, 'progression');
+            } catch (error) {
+                elements.pingResult.innerHTML = `
+                    <div class="ping-result error">
+                        ❌ Timeout - Four injoignable
+                    </div>
+                `;
+                log('❌ PING timeout', 'erreur');
+            }
+        }
+
+        async function theiere() {
+            try {
+                const response = await fetch(`${API_BASE}/theiere`);
+                const data = await response.json();
+                log(`🫖 Code 418: ${data.message}`, 'erreur');
+            } catch (error) {
+                log('❌ Erreur: ' + error.message, 'erreur');
+            }
+        }
+
+        function afficherPaquet(paquet, type) {
+            elements.packetDisplay.style.display = 'block';
+            elements.packetViz.innerHTML = `
+                <div class="packet-section">
+                    <div class="packet-label">TYPE</div>
+                    <div class="packet-content">${type}</div>
+                </div>
+                <div class="packet-section">
+                    <div class="packet-label">FOUR</div>
+                    <div class="packet-content">${paquet.four_id || '--'}</div>
+                </div>
+                <div class="packet-section">
+                    <div class="packet-label">CAPACITÉ</div>
+                    <div class="packet-content">${paquet.capacite || '--'}</div>
+                </div>
+            `;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🎛️ Tabs
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🚀 Initialisation
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        elements.btnPrechauffer.addEventListener('click', prechauffer);
+        elements.btnCommander.addEventListener('click', commander);
+        elements.btnPing.addEventListener('click', ping);
+        elements.btnTheiere.addEventListener('click', theiere);
+        elements.btnDocs.addEventListener('click', () => window.open('/api/flan/documentation', '_blank'));
+
+        // Charger les données initiales
+        chargerRecettes();
+        chargerFours();
+        setInterval(chargerFours, 5000);
+
+        log('🚀 Client FLAN initialisé');
+        log('💡 Conseil: Préchauffez le four avant de commander !');
+    </script>
+</body>
+</html>
